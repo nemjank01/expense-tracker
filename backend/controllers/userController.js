@@ -116,3 +116,39 @@ export async function getCurrentUser(req, res) {
     });
   }
 }
+
+export async function updateProfile(req, res) {
+  const { name, email } = req.body;
+
+  if (!name || !email || !validator.isEmail(email)) {
+    return res.status(400).json({
+      success: false,
+      message: "Valid email and name are required.",
+    });
+  }
+
+  try {
+    const exists = await user.findOne({ email, _id: { $ne: req.user.id } });
+
+    if (exists) {
+      return res.status(409).json({
+        success: false,
+        message: "Eamil already in use.",
+      });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { name, email },
+      { new: true, runValidators: true, select: "name email" },
+    );
+
+    res.status(200).json({ success: true, user });
+  } catch (error) {
+    console.error(err);
+    return res.status(500).json({
+      success: false,
+      message: "Server error.",
+    });
+  }
+}
