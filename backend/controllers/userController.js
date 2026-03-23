@@ -102,3 +102,17 @@ export async function loginUser(req, res) {
     });
   }
 }
+
+export async function getCurrentUser(req, res) {
+  try {
+    const user = await User.findById(req.user.id).select("name email");
+
+    res.status(200).json({ success: true, user });
+  } catch (error) {
+    console.error(err);
+    return res.status(500).json({
+      success: false,
+      message: "Server error.",
+    });
+  }
+}
