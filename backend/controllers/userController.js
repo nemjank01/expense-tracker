@@ -85,7 +85,7 @@ export async function loginUser(req, res) {
     }
 
     const token = createToken(user._id);
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       token,
       user: {
@@ -94,7 +94,7 @@ export async function loginUser(req, res) {
         email: user.email,
       },
     });
-  } catch (error) {
+  } catch (err) {
     console.error(err);
     return res.status(500).json({
       success: false,
@@ -107,8 +107,8 @@ export async function getCurrentUser(req, res) {
   try {
     const user = await User.findById(req.user.id).select("name email");
 
-    res.status(200).json({ success: true, user });
-  } catch (error) {
+    return res.status(200).json({ success: true, user });
+  } catch (err) {
     console.error(err);
     return res.status(500).json({
       success: false,
@@ -143,8 +143,51 @@ export async function updateProfile(req, res) {
       { new: true, runValidators: true, select: "name email" },
     );
 
-    res.status(200).json({ success: true, user });
-  } catch (error) {
+    return res.status(200).json({ success: true, user });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      success: false,
+      message: "Server error.",
+    });
+  }
+}
+
+export async function updatePassword(req, res) {
+  const { currentPassword, newPassword } = req.body;
+
+  if (!currentPassword || !newPassword || newPassword.length < 8) {
+    return res.status(400).json({
+      success: false,
+      message: "Password invalid or too short.",
+    });
+  }
+
+  try {
+    const user = await User.findById(req.user.id).select("password");
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found.",
+      });
+    }
+
+    const match = await bcrypt.compare(currentPassword, user.password);
+    if (!match) {
+      return res.status(401).json({
+        success: false,
+        message: "Current password is incorrect.",
+      });
+    }
+
+    user.password = await bcrypt.hash(newPassword, 10);
+    await user.save();
+    return res.status(200).json({
+      success: true,
+      message: "Password changed.",
+    });
+  } catch (err) {
     console.error(err);
     return res.status(500).json({
       success: false,
