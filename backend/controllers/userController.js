@@ -12,20 +12,20 @@ export async function registerUser(req, res) {
   const { name, email, password } = req.body;
 
   if (!name || !email || !password) {
-    res.status(400).json({
+    return res.status(400).json({
       success: false,
       message: "All fields are required.",
     });
   }
 
   if (!validator.isEmail(email)) {
-    res.status(400).json({
+    return res.status(400).json({
       success: false,
       message: "Invalid email.",
     });
   }
   if (password.length < 8) {
-    res.status(400).json({
+    return res.status(400).json({
       success: false,
       message: "Password must be at least 8 characters.",
     });
@@ -33,7 +33,7 @@ export async function registerUser(req, res) {
 
   try {
     if (await User.findOne({ email })) {
-      res.status(409).json({
+      return res.status(409).json({
         success: false,
         message: "User already exist.",
       });
@@ -43,14 +43,60 @@ export async function registerUser(req, res) {
     const user = await User.create({ name, email, password: hashedPassword });
     const token = createToken(user._id);
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       token,
       user: { id: user._id, name: user.name, email: user.email },
     });
   } catch (err) {
     console.error(err);
-    res.status(500).json({
+    return res.status(500).json({
+      success: false,
+      message: "Server error.",
+    });
+  }
+}
+
+export async function loginUser(req, res) {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({
+      success: false,
+      message: "All fields are required.",
+    });
+  }
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid email or password.",
+      });
+    }
+
+    const matchPassword = bcrypt.compare(password, user.password);
+    if (!matchPassword) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid email or password.",
+      });
+    }
+
+    const token = createToken(user._id);
+    res.status(200).json({
+      success: true,
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+      },
+    });
+  } catch (error) {
+    console.error(err);
+    return res.status(500).json({
       success: false,
       message: "Server error.",
     });
