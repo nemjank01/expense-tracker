@@ -76,7 +76,7 @@ export async function loginUser(req, res) {
       });
     }
 
-    const matchPassword = bcrypt.compare(password, user.password);
+    const matchPassword = await bcrypt.compare(password, user.password);
     if (!matchPassword) {
       return res.status(401).json({
         success: false,
@@ -107,7 +107,12 @@ export async function getCurrentUser(req, res) {
   try {
     const user = await User.findById(req.user.id).select("name email");
 
-    return res.status(200).json({ success: true, user });
+    return res
+      .status(200)
+      .json({
+        success: true,
+        user: { id: user.id, name: user.name, email: user.email },
+      });
   } catch (err) {
     console.error(err);
     return res.status(500).json({

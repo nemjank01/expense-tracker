@@ -3,6 +3,8 @@ import cors from "cors";
 import dotenv from "dotenv";
 import { connectDB } from "./config/db.js";
 
+import userRouter from "./routes/userRoutes.js";
+
 dotenv.config();
 const app = express();
 const PORT = 3000;
@@ -16,6 +18,8 @@ app.use(express.urlencoded({ extended: true }));
 connectDB();
 
 //ROUTES
+app.use("/api/user", userRouter);
+
 app.get("/", (req, res) => {
   res.send("API WORKS!");
 });
