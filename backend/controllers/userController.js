@@ -107,12 +107,10 @@ export async function getCurrentUser(req, res) {
   try {
     const user = await User.findById(req.user.id).select("name email");
 
-    return res
-      .status(200)
-      .json({
-        success: true,
-        user: { id: user.id, name: user.name, email: user.email },
-      });
+    return res.status(200).json({
+      success: true,
+      user: { id: user.id, name: user.name, email: user.email },
+    });
   } catch (err) {
     console.error(err);
     return res.status(500).json({
@@ -133,7 +131,7 @@ export async function updateProfile(req, res) {
   }
 
   try {
-    const exists = await user.findOne({ email, _id: { $ne: req.user.id } });
+    const exists = await User.findOne({ email, _id: { $ne: req.user.id } });
 
     if (exists) {
       return res.status(409).json({
@@ -148,7 +146,10 @@ export async function updateProfile(req, res) {
       { new: true, runValidators: true, select: "name email" },
     );
 
-    return res.status(200).json({ success: true, user });
+    return res.status(200).json({
+      success: true,
+      user: { id: user.id, name: user.name, email: user.email },
+    });
   } catch (err) {
     console.error(err);
     return res.status(500).json({

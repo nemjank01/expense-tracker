@@ -16,6 +16,6 @@ router.post("/login", loginUser);
 // PROTECTED ROUTES
 router.get("/me", authMiddleware, getCurrentUser);
 router.put("/profile", authMiddleware, updateProfile);
-router.get("/password", authMiddleware, updatePassword);
+router.put("/password", authMiddleware, updatePassword);
 
 export default router;
