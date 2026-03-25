@@ -6,6 +6,7 @@ import { connectDB } from "./config/db.js";
 import userRouter from "./routes/userRoutes.js";
 import incomeRouter from "./routes/incomeRoutes.js";
 import expenseRouter from "./routes/expenseRoutes.js";
+import dashboardRouter from "./routes/dashboardRoutes.js";
 
 dotenv.config();
 const app = express();
@@ -23,6 +24,7 @@ connectDB();
 app.use("/api/user", userRouter);
 app.use("/api/income", incomeRouter);
 app.use("/api/expense", expenseRouter);
+app.use("/api/dashboard", dashboardRouter);
 
 app.get("/", (req, res) => {
   res.send("API WORKS!");
