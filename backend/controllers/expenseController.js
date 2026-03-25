@@ -1,8 +1,8 @@
-import Income from "../models/incomeModel.js";
-import XSLX from "xlsx";
+import Expense from "../models/expenseModel.js";
 import getDateRange from "../utils/dateFilter.js";
+import XSLX from "xlsx";
 
-export async function addIncome(req, res) {
+export async function addExpense(req, res) {
   const userId = req.user._id;
   const { description, category, amount, date } = req.body;
 
@@ -14,7 +14,7 @@ export async function addIncome(req, res) {
       });
     }
 
-    const newIncome = new Income({
+    const newExpense = new Expense({
       userId,
       description,
       category,
@@ -22,12 +22,12 @@ export async function addIncome(req, res) {
       date: new Date(date),
     });
 
-    await newIncome.save();
+    await newExpense.save();
 
     return res.status(201).json({
       success: true,
-      message: "Income created successfully!",
-      data: newIncome,
+      message: "Expense created successfully!",
+      data: newExpense,
     });
   } catch (err) {
     console.error(err);
@@ -38,12 +38,12 @@ export async function addIncome(req, res) {
   }
 }
 
-export async function getAllIncomes(req, res) {
+export async function getAllExpenses(req, res) {
   const userId = req.user._id;
 
   try {
-    const incomes = await Income.find({ userId }).sort({ date: -1 });
-    return res.status(200).json({ success: true, data: incomes });
+    const expenses = await Expense.find({ userId }).sort({ date: -1 });
+    return res.status(200).json({ success: true, data: expenses });
   } catch (err) {
     console.error(err);
     return res.status(500).json({
@@ -53,28 +53,28 @@ export async function getAllIncomes(req, res) {
   }
 }
 
-export async function updateIncome(req, res) {
+export async function updateExpense(req, res) {
   const { id } = req.params;
   const userId = req.user._id;
   const { description, amount } = req.body;
 
   try {
-    const updatedIncome = await Income.findOneAndUpdate(
+    const updatedExpense = await Expense.findOneAndUpdate(
       { _id: id, userId },
       { description, amount },
       { new: true },
     );
 
-    if (!updateIncome) {
+    if (!updateExpense) {
       return res
         .status(404)
-        .json({ success: false, message: "Income not found" });
+        .json({ success: false, message: "Expense not found" });
     }
 
     return res.status(200).json({
       success: true,
-      message: "Income updated successfully.",
-      data: updatedIncome,
+      message: "Expense updated successfully.",
+      data: updatedExpense,
     });
   } catch (err) {
     console.error(err);
@@ -85,21 +85,21 @@ export async function updateIncome(req, res) {
   }
 }
 
-export async function deleteIncome(req, res) {
+export async function deleteExpense(req, res) {
   const { id } = req.params;
 
   try {
-    const income = await Income.findByIdAndDelete({ _id: id });
+    const expense = await Expense.findByIdAndDelete({ _id: id });
 
-    if (!income) {
+    if (!expense) {
       return res
         .status(404)
-        .json({ success: false, message: "Income not found" });
+        .json({ success: false, message: "Expense not found" });
     }
 
     return res.status(200).json({
       success: true,
-      message: "Income deleted successfully.",
+      message: "Expense deleted successfully.",
     });
   } catch (err) {
     console.error(err);
@@ -110,23 +110,23 @@ export async function deleteIncome(req, res) {
   }
 }
 
-export async function downloadIncomeExcel(req, res) {
+export async function downloadExpenseExcel(req, res) {
   const userId = req.user._id;
 
   try {
-    const incomes = await Income.find({ userId }).sort({ date: -1 });
-    const plainData = incomes.map((income) => ({
-      Description: income.description,
-      Amount: income.amount,
-      Date: new Date(income.date).toLocaleDateString(),
+    const expenses = await Expense.find({ userId }).sort({ date: -1 });
+    const plainData = expenses.map((expense) => ({
+      Description: expense.description,
+      Amount: expense.amount,
+      Date: new Date(expense.date).toLocaleDateString(),
     }));
 
     const worksheet = XSLX.utils.json_to_sheet(plainData);
     const workbook = XSLX.utils.book_new();
-    XSLX.utils.book_append_sheet(workbook, worksheet, "incomeModel");
-    XSLX.writeFile(workbook, "income_details.xlsx");
+    XSLX.utils.book_append_sheet(workbook, worksheet, "expenseModel");
+    XSLX.writeFile(workbook, "expense_details.xlsx");
 
-    res.download("income_details.xlsx");
+    res.download("expense_details.xlsx");
   } catch (err) {
     console.error(err);
     return res.status(500).json({
@@ -136,28 +136,29 @@ export async function downloadIncomeExcel(req, res) {
   }
 }
 
-export async function getIncomeOverview(req, res) {
+export async function getExpenseOverview(req, res) {
   const userId = req.user._id;
 
   try {
     const { range = "monthly" } = req.query;
     const { start, end } = getDateRange(range);
 
-    const incomes = await Income.find({
+    const expense = await Expense.find({
       userId,
       date: { $gte: start, $lte: end },
     }).sort({ date: -1 });
 
-    const totalIncome = incomes.reduce((acc, cur) => acc + cur.amount, 0);
-    const averageIncome = incomes.length > 0 ? totalIncome / incomes.length : 0;
-    const numberOfTransactions = incomes.length;
-    const recentTransactions = incomes.slice(0, 5);
+    const totalExpense = expense.reduce((acc, cur) => acc + cur.amount, 0);
+    const averageExpense =
+      expense.length > 0 ? totalExpense / expense.length : 0;
+    const numberOfTransactions = expense.length;
+    const recentTransactions = expense.slice(0, 5);
 
     res.status(200).json({
       success: true,
       data: {
-        totalIncome,
-        averageIncome,
+        totalExpense,
+        averageExpense,
         numberOfTransactions,
         recentTransactions,
         range,
